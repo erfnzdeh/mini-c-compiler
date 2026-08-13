@@ -2,16 +2,15 @@
 
 ![tests](https://github.com/erfnzdeh/mini-c-compiler/actions/workflows/tests.yml/badge.svg)
 ![python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
-![course](https://img.shields.io/badge/course-CE414_Compiler_Design-blue)
 
 A compiler for a C-like teaching language, written from scratch in Python with
 no parser generator and no external parsing library. It takes a source program
 all the way from raw characters to intermediate code, then runs that code on a
 bundled stack VM.
 
-Built for the Compiler Design course (CE414) at Sharif University of
-Technology, spring 2025, by [Yashar Paymai](https://github.com/yasharp83) and
-[Pourya Erfanzadeh](https://github.com/erfnzdeh).
+Written by [Yashar Paymai](https://github.com/yasharp83) and
+[Pourya Erfanzadeh](https://github.com/erfnzdeh) for Compiler Design (40414) at
+Sharif University of Technology, spring 2025, under Dr. Samane Hosseinmardi.
 
 ## The pipeline
 
@@ -131,15 +130,3 @@ the same script on Python 3.10, 3.11 and 3.13.
 
 Each of `scanner/`, `parser/` and `code_gen/` has its own README covering that
 phase in more detail.
-
-## Notes
-
-This started as coursework and the history reflects that — it is the original
-commit history from the semester, kept intact rather than squashed. Commits on
-top of it are limited to packaging: dependency declaration, the test runner, CI,
-and this README.
-
-Licensing is not yet settled. The work is jointly authored and no license has
-been agreed with both authors, so for now no terms are granted; treat it as
-viewable source. Course-provided material (assignment briefs, lecture slides)
-has been left out of this repository.
