@@ -19,4 +19,6 @@ def exec(exe_path='output.txt' , result_path='expected.txt', error_path='error.t
     result_file.close()
     error_file.close()
 
-exec()
+
+if __name__ == "__main__":
+    exec()

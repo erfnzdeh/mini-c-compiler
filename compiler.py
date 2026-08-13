@@ -40,4 +40,6 @@ def compile(
     P.codeGen.export(file_path="output.txt")
     P.codeGen.export_semantic_errors(file_path="semantic_errors.txt")
 
-compile()
+
+if __name__ == "__main__":
+    compile()
