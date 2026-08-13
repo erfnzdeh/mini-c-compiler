@@ -27,8 +27,13 @@ for t in "${cases[@]}"; do
         echo "  SKIP $t (no input.txt)"; continue
     fi
 
-    "$PY" compile_and_exec.py -i "$d/input.txt" \
-        -o "$TMP/$t.out" -e "$TMP/$t.err" >/dev/null 2>&1
+    if ! "$PY" compile_and_exec.py -i "$d/input.txt" \
+            -o "$TMP/$t.out" -e "$TMP/$t.err" >"$TMP/$t.log" 2>&1; then
+        echo "  FAIL $t (compiler exited non-zero)"
+        sed 's/^/        /' "$TMP/$t.log"
+        fail=$((fail + 1)); failed+=("$t")
+        continue
+    fi
 
     ok=1
     # Programs that should run: compare VM output.
