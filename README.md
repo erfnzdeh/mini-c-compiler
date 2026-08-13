@@ -1,7 +1,7 @@
 # mini-c-compiler
 
 ![tests](https://github.com/erfnzdeh/mini-c-compiler/actions/workflows/tests.yml/badge.svg)
-![python](https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white)
+![python](https://img.shields.io/badge/python-3.10%2B-3776AB?logo=python&logoColor=white)
 ![course](https://img.shields.io/badge/course-CE414_Compiler_Design-blue)
 
 A compiler for a C-like teaching language, written from scratch in Python with
@@ -86,6 +86,13 @@ and `break` outside a loop:
 pip install -r requirements.txt
 ```
 
+Python 3.10 or newer is required. Not for any modern syntax — the code is
+plain — but because the `parser/` package collides with the `parser` module
+that CPython shipped as a *built-in* through 3.9. Built-in modules are resolved
+ahead of `sys.path`, so on 3.9 `from parser.parser import Parser` finds the
+interpreter's own module and fails with `'parser' is not a package`. The
+collision disappeared when that module was removed in 3.10.
+
 Compile and run in one shot:
 
 ```bash
@@ -108,7 +115,7 @@ expected to fail semantic analysis with specific diagnostics.
 
 The runner diffs VM output against each case's `expected.txt` and diagnostics
 against its `semantic_errors.txt`, and exits non-zero on any failure. CI runs
-the same script on Python 3.9, 3.11 and 3.13.
+the same script on Python 3.10, 3.11 and 3.13.
 
 ## Layout
 
