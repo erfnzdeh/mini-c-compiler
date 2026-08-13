@@ -30,3 +30,13 @@ venv/
 # OS specific files
 .DS_Store
 Thumbs.db 
+# Compiler artifacts (regenerated on every run)
+/tokens.txt
+/lexical_errors.txt
+/symbol_table.txt
+/parse_tree.txt
+/syntax_errors.txt
+/semantic_errors.txt
+/output.txt
+/expected.txt
+/error.txt
