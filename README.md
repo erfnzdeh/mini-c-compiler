@@ -14,21 +14,32 @@ Sharif University of Technology, spring 2025, under Dr. Samane Hosseinmardi.
 
 ## The pipeline
 
+```mermaid
+flowchart LR
+    SRC(["input.txt"]) --> SC["scanner<br/>table-driven DFA"]
+    SC --> PA["parser<br/>transition diagrams<br/>46 grammar rules"]
+    PA --> CG["code_gen<br/>49 semantic routines"]
+    CG --> VM["vm.py<br/>12-instruction stack VM"]
+    VM --> OUT(["program output"])
+
+    SC -.-> SCO["tokens.txt<br/>lexical_errors.txt<br/>symbol_table.txt"]
+    PA -.-> PAO["parse_tree.txt<br/>syntax_errors.txt"]
+    CG -.-> CGO["output.txt<br/>semantic_errors.txt"]
+    VM -.-> VMO["expected.txt<br/>error.txt"]
+
+    classDef phase fill:#2b6cb0,stroke:#1a4971,color:#ffffff
+    classDef gen fill:#2f855a,stroke:#1c5137,color:#ffffff
+    classDef run fill:#6b46c1,stroke:#4c3191,color:#ffffff
+    classDef io fill:#4a5568,stroke:#2d3748,color:#ffffff
+    classDef art fill:#e2e8f0,stroke:#a0aec0,color:#1a202c
+
+    class SC,PA phase
+    class CG gen
+    class VM run
+    class SRC,OUT io
+    class SCO,PAO,CGO,VMO art
 ```
-input.txt
-    │
-    ▼  scanner/      table-driven DFA, 7 keywords
-  tokens ──────────────────────────────► tokens.txt, lexical_errors.txt, symbol_table.txt
-    │
-    ▼  parser/       transition-diagram predictive parser, 46 grammar rules
- parse tree ────────────────────────────► parse_tree.txt, syntax_errors.txt
-    │
-    ▼  code_gen/     49 semantic routines fired from the grammar
- three-address code ────────────────────► output.txt, semantic_errors.txt
-    │
-    ▼  Tests/phase3_tester/test/vm.py
-  program output ───────────────────────► expected.txt, error.txt
-```
+
 
 The three phases are roughly 450, 390 and 450 lines respectively.
 
@@ -39,6 +50,66 @@ generator hangs off that same grammar — the `#push_type`, `#scope_start`,
 `#backpatch_jump` markers you can see interleaved with the productions *are*
 the semantic actions, fired as the parser walks each rule. Adding a language
 construct means editing the grammar file, not the parser.
+
+## Inside the scanner
+
+Phase one is a single DFA covering every token class at once, built in
+`scanner/init_dfa.py`. Longest-match falls out of the structure: the machine
+keeps consuming while an edge exists, and the token is emitted when it reaches a
+state with nowhere left to go. The `/` and `*` branches are where it gets
+interesting — one character of lookahead decides between an operator, a comment,
+and an error.
+
+```mermaid
+stateDiagram-v2
+    direction LR
+
+    [*] --> Start
+
+    Start --> NUM: digit
+    NUM --> NUM: digit
+    NUM --> BadNum: letter
+
+    Start --> ID: letter
+    ID --> ID: letter or digit
+
+    Start --> Eq: =
+    Eq --> EqEq: =
+
+    Start --> Slash: /
+    Slash --> Cmt: *
+    Cmt --> Cmt: any but *
+    Cmt --> CmtStar: *
+    CmtStar --> Cmt: any but /
+    CmtStar --> CmtDone: /
+
+    Start --> Star: *
+    Star --> BadCmt: /
+
+    Start --> Sym: other symbol
+    Start --> WS: whitespace
+    Start --> BadIn: illegal char
+
+    NUM: NUM
+    ID: ID or keyword
+    Eq: SYMBOL =
+    EqEq: SYMBOL ==
+    Slash: SYMBOL /
+    Star: SYMBOL *
+    Sym: SYMBOL
+    WS: WHITE
+    Cmt: inside comment
+    CmtStar: saw star
+    CmtDone: comment closed
+    BadNum: Invalid number
+    BadCmt: Unmatched comment
+    BadIn: Invalid input
+```
+
+Keywords are not separate states. Everything alphabetic lands in `ID`, and
+`get_next_token` re-labels the lexeme as `KEYWORD` afterwards if
+`is_keyword` matches one of the seven reserved words — which is why adding a
+keyword touches the list in `alphabet_config.py` and nothing in the machine.
 
 ## The language
 
