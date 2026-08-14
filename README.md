@@ -111,6 +111,61 @@ Keywords are not separate states. Everything alphabetic lands in `ID`, and
 `is_keyword` matches one of the seven reserved words — which is why adding a
 keyword touches the list in `alphabet_config.py` and nothing in the machine.
 
+## Grammar-driven code generation
+
+The claim above — that a language construct lives in the grammar file rather
+than in the parser — is easiest to see on `while`. This is its entire
+definition, verbatim from `parser/grammar_config/grammar.txt`:
+
+```
+IterationStmt -> while #label ( Expression ) #hold #scope_start(c) Statement #while_jump #scope_finish(c) #if_decide
+```
+
+The parser turns that line into a transition diagram at startup. Grammar symbols
+become edges; the `#` markers ride along on those edges as start/finish actions
+and fire as the parser crosses them:
+
+```mermaid
+flowchart LR
+    S0((0)) -->|"while<br/>#label"| S1((1))
+    S1 -->|"("| S2((2))
+    S2 -->|"Expression"| S3((3))
+    S3 -->|")<br/>#hold<br/>#scope_start(c)"| S4((4))
+    S4 -->|"Statement<br/>#while_jump<br/>#scope_finish(c)<br/>#if_decide"| S5(((5)))
+
+    classDef state fill:#2b6cb0,stroke:#1a4971,color:#ffffff
+    classDef final fill:#2f855a,stroke:#1c5137,color:#ffffff
+    class S0,S1,S2,S3,S4 state
+    class S5 final
+```
+
+Four of those actions do the loop's control flow, and they have to cooperate
+across the body because the jump target isn't known until the body has been
+generated — the classic backpatching problem:
+
+| Action | What it does |
+|--------|--------------|
+| `#label` | Pushes the address of the loop top, before the condition is evaluated |
+| `#hold` | Reserves an empty slot for the conditional jump and pushes its address |
+| `#while_jump` | Emits `JP` back to the address `#label` recorded |
+| `#if_decide` | Fills the reserved slot with `JPF`, now that the exit address is known |
+
+Compiling `while (c < 3) { c = c + 1; }` produces exactly that shape:
+
+```
+15  (LT, 20024, #3, 60000)     condition c < 3, result in 60000   <- #label recorded 15
+16  (JPF, 60000, 20, )         backpatched last, by #if_decide    <- #hold reserved 16
+17  (ADD, 20024, #1, 60004)    body
+18  (ASSIGN, 60004, 20024, )   body
+19  (JP, 15, , )               emitted by #while_jump
+20  ...                        first instruction after the loop
+```
+
+Line 19 jumps to 15, the address `#label` pushed before the condition. Line 16
+was written last: it sat empty until the body was finished and `#if_decide`
+knew the loop exit was 20. The `#scope_start(c)` / `#scope_finish(c)` pair
+around the body is what lets `break` find its enclosing loop.
+
 ## The language
 
 A C subset: `int` and `void`, one-dimensional arrays, functions with recursion,
