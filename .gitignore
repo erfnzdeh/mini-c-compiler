@@ -40,3 +40,7 @@ Thumbs.db
 /output.txt
 /expected.txt
 /error.txt
+
+# Virtualenvs
+.venv/
+.venv*/
